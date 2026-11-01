@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Apple Siri Live Orb</title>
+  <title>Blue Fire Ball Live Orb</title>
   <style>
     * {
       box-sizing: border-box;
@@ -12,9 +12,9 @@
     }
 
     body {
-      background-color: #000000;
+      background-color: #030408;
       color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       min-height: 100vh;
       width: 100vw;
       display: flex;
@@ -26,375 +26,443 @@
       -webkit-user-select: none;
     }
 
-    /* Container for the Siri sphere */
-    .siri-container {
+    /* Container for the Blue Fire Ball */
+    #canvas-container {
       position: relative;
-      width: 360px;
-      height: 360px;
+      width: 100vw;
+      height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
+      background: radial-gradient(circle at center, #070d1f 0%, #030408 70%, #000000 100%);
     }
 
-    @media (max-width: 480px) {
-      .siri-container {
-        width: 290px;
-        height: 290px;
-      }
-    }
-
-    /* Outer ambient chromatic bloom */
-    .ambient-glow {
-      position: absolute;
-      inset: -50px;
-      border-radius: 50%;
-      background: radial-gradient(
-        circle,
-        rgba(120, 40, 240, 0.3) 0%,
-        rgba(0, 210, 255, 0.2) 35%,
-        rgba(255, 0, 128, 0.16) 55%,
-        transparent 75%
-      );
-      filter: blur(52px);
-      pointer-events: none;
-      animation: ambientPulse 5s ease-in-out infinite alternate;
-    }
-
-    @keyframes ambientPulse {
-      0% { transform: scale(0.92) rotate(0deg); opacity: 0.7; }
-      100% { transform: scale(1.12) rotate(180deg); opacity: 1; }
-    }
-
-    /* Liquid Siri Canvas */
     canvas {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      border-radius: 50%;
-      filter: drop-shadow(0 0 35px rgba(0, 195, 255, 0.45)) drop-shadow(0 0 65px rgba(255, 0, 128, 0.4));
-      transition: transform 0.08s ease-out;
+      display: block;
+      cursor: grab;
     }
 
-    /* Minimal UI Controls */
-    .ui-controls {
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Cinematic header overlay */
+    .title-overlay {
       position: absolute;
-      bottom: 40px;
+      top: 36px;
+      text-align: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .title-overlay h1 {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      background: linear-gradient(180deg, #ffffff 0%, #67e8f9 50%, #0284c7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.7));
+    }
+
+    .title-overlay p {
+      font-size: 11px;
+      color: rgba(147, 197, 253, 0.5);
+      margin-top: 4px;
+      letter-spacing: 0.1em;
+    }
+
+    /* Interactive Bottom Bar */
+    .controls-overlay {
+      position: absolute;
+      bottom: 36px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      z-index: 20;
+      z-index: 10;
     }
 
-    .mic-button {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: #ffffff;
-      padding: 12px 24px;
-      border-radius: 9999px;
-      font-size: 14px;
-      font-weight: 500;
+    .action-badge {
       display: flex;
       align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .mic-button:hover {
-      background: rgba(255, 255, 255, 0.16);
-      border-color: rgba(255, 255, 255, 0.35);
-      transform: scale(1.04);
-    }
-
-    .mic-button.active {
-      background: linear-gradient(135deg, rgba(255, 0, 128, 0.35), rgba(0, 210, 255, 0.35));
-      border-color: rgba(255, 255, 255, 0.45);
-      box-shadow: 0 0 25px rgba(0, 210, 255, 0.45), 0 0 45px rgba(255, 0, 128, 0.3);
-    }
-
-    .mic-icon {
-      width: 16px;
-      height: 16px;
-      fill: currentColor;
-    }
-
-    .status-text {
+      gap: 8px;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      background: rgba(3, 7, 18, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 0 25px rgba(2, 132, 199, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      color: #bae6fd;
       font-size: 13px;
-      color: rgba(255, 255, 255, 0.55);
-      letter-spacing: 0.02em;
-      transition: color 0.3s ease;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .status-text.active {
-      color: #60a5fa;
+    .action-badge:hover {
+      background: rgba(8, 47, 73, 0.6);
+      border-color: rgba(56, 189, 248, 0.6);
+      color: #ffffff;
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .action-badge:active {
+      transform: scale(0.97);
+    }
+
+    .fire-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #38bdf8;
+      box-shadow: 0 0 10px #38bdf8, 0 0 20px #0284c7;
+      animation: flamePulse 1.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes flamePulse {
+      0% { transform: scale(0.85); opacity: 0.7; }
+      100% { transform: scale(1.3); opacity: 1; }
+    }
+
+    .hint {
+      font-size: 11px;
+      color: rgba(147, 197, 253, 0.45);
+      letter-spacing: 0.05em;
     }
   </style>
 </head>
 <body>
 
-  <!-- Centered Liquid Siri Orb -->
-  <div class="siri-container" id="siriContainer" title="Tap to interact">
-    <div class="ambient-glow" id="ambientGlow"></div>
-    <canvas id="siriCanvas"></canvas>
+  <div class="title-overlay">
+    <h1>Blue Fire Plasma Orb</h1>
+    <p>Live Volumetric Arcane Flame</p>
   </div>
 
-  <!-- Minimal Voice Controls -->
-  <div class="ui-controls">
-    <button class="mic-button" id="micBtn">
-      <svg class="mic-icon" viewBox="0 0 24 24">
-        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-      </svg>
-      <span id="btnLabel">Enable Voice Reactivity</span>
+  <div id="canvas-container">
+    <canvas id="fireCanvas"></canvas>
+  </div>
+
+  <div class="controls-overlay">
+    <button class="action-badge" id="flareBtn">
+      <span class="fire-dot"></span>
+      <span id="btnText">Click Orb or Tap Here to Ignite Flare</span>
     </button>
-    <div class="status-text" id="statusText">Tap the orb or button to activate voice listening</div>
+    <div class="hint">Drag cursor or touch to steer the flame vortex</div>
   </div>
 
+  <!-- WebGL Shader Program -->
   <script>
-    const canvas = document.getElementById('siriCanvas');
-    const ctx = canvas.getContext('2d');
-    const container = document.getElementById('siriContainer');
-    const ambientGlow = document.getElementById('ambientGlow');
-    const micBtn = document.getElementById('micBtn');
-    const btnLabel = document.getElementById('btnLabel');
-    const statusText = document.getElementById('statusText');
+    const canvas = document.getElementById('fireCanvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    const flareBtn = document.getElementById('flareBtn');
+    const btnText = document.getElementById('btnText');
 
-    // High-DPI Canvas scaling
-    let size = 360;
-    function resizeCanvas() {
-      const rect = container.getBoundingClientRect();
-      size = Math.min(rect.width, rect.height);
-      const dpr = window.devicePixelRatio || 2;
-      canvas.width = size * dpr;
-      canvas.height = size * dpr;
-      ctx.scale(dpr, dpr);
+    if (!gl) {
+      alert('WebGL is required for the blue fire shader.');
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
 
-    // Audio FFT Analyser
-    let audioCtx = null;
-    let analyser = null;
-    let micStream = null;
-    let isMicActive = false;
-    const freqData = new Uint8Array(64);
-
-    let audioVolume = 0;
-    let smoothedVolume = 0;
-    let audioBass = 0;
-    let smoothedBass = 0;
-    let audioTreble = 0;
-    let smoothedTreble = 0;
-
-    async function toggleMicrophone() {
-      if (isMicActive) {
-        stopMicrophone();
-      } else {
-        await startMicrophone();
+    // --- Vertex Shader ---
+    const vsSource = `
+      attribute vec2 a_position;
+      void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
       }
-    }
+    `;
 
-    async function startMicrophone() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        micStream = stream;
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 128;
-        analyser.smoothingTimeConstant = 0.82;
+    // --- Fragment Shader: Volumetric Blue Fireball & Plasma Flares ---
+    const fsSource = `
+      precision highp float;
 
-        const source = audioCtx.createMediaStreamSource(stream);
-        source.connect(analyser);
+      uniform vec2 u_resolution;
+      uniform float u_time;
+      uniform vec2 u_mouse;
+      uniform float u_flare;
 
-        isMicActive = true;
-        micBtn.classList.add('active');
-        btnLabel.textContent = 'Microphone Active';
-        statusText.textContent = 'Listening to your voice in real time...';
-        statusText.classList.add('active');
-      } catch (err) {
-        statusText.textContent = 'Microphone not permitted. Fluid simulation active.';
+      // 3D Simplex-Style Noise for Convection Turbulence
+      vec4 permute(vec4 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+      vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+      float snoise(vec3 v) {
+        const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+        const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+
+        vec3 i  = floor(v + dot(v, C.yyy));
+        vec3 x0 = v - i + dot(i, C.xxx);
+
+        vec3 g = step(x0.yzx, x0.xyz);
+        vec3 l = 1.0 - g;
+        vec3 i1 = min(g.xyz, l.zxy);
+        vec3 i2 = max(g.xyz, l.zxy);
+
+        vec3 x1 = x0 - i1 + 1.0 * C.xxx;
+        vec3 x2 = x0 - i2 + 2.0 * C.xxx;
+        vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
+
+        i = mod(i, 289.0);
+        vec4 p = permute(permute(permute(
+                  i.z + vec4(0.0, i1.z, i2.z, 1.0))
+                + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+                + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+
+        float n_ = 0.142857142857;
+        vec3 ns = n_ * D.wyz - D.xzx;
+
+        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+
+        vec4 x_ = floor(j * ns.z);
+        vec4 y_ = floor(j - 7.0 * x_);
+
+        vec4 x = x_ *ns.x + ns.yyyy;
+        vec4 y = y_ *ns.x + ns.yyyy;
+        vec4 h = 1.0 - abs(x) - abs(y);
+
+        vec4 b0 = vec4(x.xy, y.xy);
+        vec4 b1 = vec4(x.zw, y.zw);
+
+        vec4 s0 = floor(b0)*2.0 + 1.0;
+        vec4 s1 = floor(b1)*2.0 + 1.0;
+        vec4 sh = -step(h, vec4(0.0));
+
+        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+
+        vec3 p0 = vec3(a0.xy, h.x);
+        vec3 p1 = vec3(a0.zw, h.y);
+        vec3 p2 = vec3(a1.xy, h.z);
+        vec3 p3 = vec3(a1.zw, h.w);
+
+        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+        p0 *= norm.x;
+        p1 *= norm.y;
+        p2 *= norm.z;
+        p3 *= norm.w;
+
+        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+        m = m * m;
+        return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
       }
-    }
 
-    function stopMicrophone() {
-      if (micStream) {
-        micStream.getTracks().forEach(track => track.stop());
-        micStream = null;
+      // Fractional Brownian Motion for multi-octave fire tongues
+      float fbm(vec3 p) {
+        float f = 0.0;
+        float w = 0.5;
+        for (int i = 0; i < 4; i++) {
+          f += w * snoise(p);
+          p = p * 2.02 + vec3(0.0, 0.4, 0.0);
+          w *= 0.5;
+        }
+        return f;
       }
-      if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
-      isMicActive = false;
-      micBtn.classList.remove('active');
-      btnLabel.textContent = 'Enable Voice Reactivity';
-      statusText.textContent = 'Microphone paused. Click to listen again.';
-      statusText.classList.remove('active');
+
+      // Pure Electric Blue Fire Spectral Palette
+      vec3 firePalette(float t) {
+        vec3 c0 = vec3(0.01, 0.02, 0.06);     // Dark outer abyss
+        vec3 c1 = vec3(0.05, 0.12, 0.55);     // Royal sapphire
+        vec3 c2 = vec3(0.0, 0.45, 0.98);      // Electric blue
+        vec3 c3 = vec3(0.0, 0.85, 1.0);       // Vivid cyan
+        vec3 c4 = vec3(0.82, 0.96, 1.0);      // Diamond ice white
+        vec3 c5 = vec3(1.0, 1.0, 1.0);        // Blinding core
+
+        if (t < 0.2) return mix(c0, c1, t / 0.2);
+        if (t < 0.45) return mix(c1, c2, (t - 0.2) / 0.25);
+        if (t < 0.7) return mix(c2, c3, (t - 0.45) / 0.25);
+        if (t < 0.9) return mix(c3, c4, (t - 0.7) / 0.2);
+        return mix(c4, c5, (t - 0.9) / 0.1);
+      }
+
+      void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.x, u_resolution.y);
+
+        // Steering offset from mouse/touch
+        vec2 m = (u_mouse - 0.5) * 0.4;
+        uv -= m;
+
+        float dist = length(uv);
+        float angle = atan(uv.y, uv.x);
+
+        // Convection heat flow: flames continuously roll and rise upward
+        float t = u_time * 1.5;
+        vec3 fireCoords = vec3(uv * 3.2, t * 0.6);
+        fireCoords.y -= t * 1.8;
+
+        // Swirling rotational vortex
+        float rot = t * 0.5;
+        mat2 rotM = mat2(cos(rot), -sin(rot), sin(rot), cos(rot));
+        vec2 warpedUV = rotM * uv;
+
+        // Multi-frequency noise
+        float n1 = fbm(fireCoords);
+        float n2 = fbm(vec3(warpedUV * 4.5, t * 0.8));
+        float turbulence = (n1 * 0.65 + n2 * 0.35);
+
+        float baseRadius = 0.28 + (u_flare * 0.08);
+
+        // Erupting tongues of solar flares
+        float flameSpikes = sin(angle * 5.0 + t * 2.5) * 0.05
+                          + cos(angle * 9.0 - t * 3.5) * 0.035
+                          + sin(angle * 13.0 + t * 4.0) * 0.02;
+
+        float upwardBias = clamp(uv.y * 0.25, -0.05, 0.25);
+        float flameEdge = baseRadius + flameSpikes + (turbulence * 0.14) + upwardBias;
+
+        float fireIntensity = 0.0;
+        if (dist < flameEdge) {
+          float normDist = dist / flameEdge;
+          fireIntensity = (1.0 - normDist);
+          fireIntensity = pow(fireIntensity, 0.8) + (turbulence * 0.4);
+        }
+
+        // Corona / Outer Plasma Wisps
+        float outerGlow = exp(-(dist - baseRadius) * 6.5) * 0.8;
+        outerGlow += (turbulence * 0.3) * exp(-(dist - baseRadius) * 4.0);
+
+        float totalEnergy = clamp(fireIntensity + outerGlow + (u_flare * 0.35), 0.0, 1.4);
+        vec3 col = firePalette(clamp(totalEnergy, 0.0, 1.0));
+
+        // White-Hot Arcane Solar Core
+        float coreRadius = 0.12 + (u_flare * 0.04);
+        if (dist < coreRadius) {
+          float coreFactor = 1.0 - (dist / coreRadius);
+          col = mix(col, vec3(1.0, 1.0, 1.0), pow(coreFactor, 1.5) * 0.95);
+        }
+
+        // Floating Fiery Blue Embers & Sparks
+        for (int i = 0; i < 14; i++) {
+          float fi = float(i);
+          float sparkTime = t * 1.2 + fi * 1.7;
+          float sparkLife = fract(sparkTime * 0.4);
+
+          float sparkAngle = fi * 2.39996 + sin(sparkTime) * 0.5;
+          float sparkDist = baseRadius * 0.8 + sparkLife * 0.45;
+          vec2 sparkPos = vec2(cos(sparkAngle), sin(sparkAngle)) * sparkDist;
+          sparkPos.y += sparkLife * 0.35; // drift upwards
+
+          float dSpark = length(uv - sparkPos);
+          float sparkIntensity = smoothstep(0.022, 0.002, dSpark) * (1.0 - sparkLife);
+          col += vec3(0.5, 0.9, 1.0) * sparkIntensity * 1.8;
+        }
+
+        // Vignette
+        float vignette = 1.0 - smoothstep(0.5, 1.3, length(uv));
+        col *= vignette;
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `;
+
+    // --- WebGL Setup Helpers ---
+    function createShader(gl, type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error(gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
     }
 
-    micBtn.addEventListener('click', toggleMicrophone);
+    const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+    const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
 
-    // Tap/Touch Feedback
-    let touchImpulse = 0;
-    container.addEventListener('pointerdown', () => {
-      touchImpulse = 0.85;
-      if (!isMicActive) toggleMicrophone();
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    // Fullscreen quad buffer
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([
+        -1.0, -1.0,
+         1.0, -1.0,
+        -1.0,  1.0,
+        -1.0,  1.0,
+         1.0, -1.0,
+         1.0,  1.0,
+      ]),
+      gl.STATIC_DRAW
+    );
+
+    const positionLocation = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // Uniform handles
+    const uResolution = gl.getUniformLocation(program, 'u_resolution');
+    const uTime = gl.getUniformLocation(program, 'u_time');
+    const uMouse = gl.getUniformLocation(program, 'u_mouse');
+    const uFlare = gl.getUniformLocation(program, 'u_flare');
+
+    function resize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Mouse & Touch Tracking
+    let targetMouseX = 0.5;
+    let targetMouseY = 0.5;
+    let currentMouseX = 0.5;
+    let currentMouseY = 0.5;
+
+    window.addEventListener('pointermove', (e) => {
+      targetMouseX = e.clientX / window.innerWidth;
+      targetMouseY = 1.0 - (e.clientY / window.innerHeight);
     });
 
-    // Apple Siri Chromatic Blobs Palette
-    const BLOB_LAYERS = [
-      { color: [0, 230, 255], speed: 1.1, phase: 0.0, baseR: 0.72 },    // Cyan
-      { color: [255, 0, 128], speed: -0.9, phase: 1.5, baseR: 0.75 },   // Hot Pink / Magenta
-      { color: [120, 40, 255], speed: 1.4, phase: 3.1, baseR: 0.68 },   // Electric Violet
-      { color: [0, 110, 255], speed: -1.2, phase: 4.7, baseR: 0.70 },  // Royal Blue
-      { color: [255, 60, 180], speed: 0.7, phase: 2.2, baseR: 0.62 },   // Hot Orchid
-      { color: [80, 250, 220], speed: -1.5, phase: 5.5, baseR: 0.58 }   // Aqua Shimmer
-    ];
-
-    let time = 0;
-
-    // 60FPS Render Loop
-    function render() {
-      requestAnimationFrame(render);
-      time += 0.022;
-
-      // Audio frequency extraction
-      if (isMicActive && analyser) {
-        analyser.getByteFrequencyData(freqData);
-
-        let bSum = 0;
-        for (let i = 0; i < 6; i++) bSum += freqData[i];
-        audioBass = (bSum / 6) / 255;
-
-        let tSum = 0;
-        for (let i = 20; i < 45; i++) tSum += freqData[i];
-        audioTreble = (tSum / 25) / 255;
-
-        let vSum = 0;
-        for (let i = 0; i < freqData.length; i++) vSum += freqData[i];
-        audioVolume = (vSum / freqData.length) / 255;
-      } else {
-        // Natural gentle autonomous Siri breathing motion
-        audioBass = Math.sin(time * 1.8) * 0.06 + 0.08;
-        audioTreble = Math.cos(time * 2.5) * 0.04 + 0.05;
-        audioVolume = (audioBass + audioTreble) * 0.5;
-      }
-
-      smoothedVolume += (audioVolume - smoothedVolume) * 0.16;
-      smoothedBass += (audioBass - smoothedBass) * 0.18;
-      smoothedTreble += (audioTreble - smoothedTreble) * 0.2;
-      touchImpulse *= 0.92;
-
-      const center = size / 2;
-      const baseRadius = (size * 0.38) * (1 + (smoothedBass * 0.45) + (touchImpulse * 0.2));
-
-      ctx.clearRect(0, 0, size, size);
-
-      // Organic fluid clipping boundary
-      ctx.save();
-      ctx.beginPath();
-      const numPoints = 64;
-      for (let i = 0; i <= numPoints; i++) {
-        const theta = (i / numPoints) * Math.PI * 2;
-        const w1 = Math.sin(theta * 3 + time * 2.5) * (4 + smoothedBass * 18);
-        const w2 = Math.cos(theta * 5 - time * 3.2) * (3 + smoothedTreble * 14);
-        const r = baseRadius + w1 + w2;
-        const x = center + Math.cos(theta) * r;
-        const y = center + Math.sin(theta) * r;
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
-      ctx.closePath();
-      ctx.clip();
-
-      // Deep fluid sphere backdrop
-      const baseGrad = ctx.createRadialGradient(center, center, baseRadius * 0.1, center, center, baseRadius);
-      baseGrad.addColorStop(0, '#0a0914');
-      baseGrad.addColorStop(0.7, '#040308');
-      baseGrad.addColorStop(1, '#000000');
-      ctx.fillStyle = baseGrad;
-      ctx.fill();
-
-      // Screen composite for chromatic color blending
-      ctx.globalCompositeOperation = 'screen';
-
-      // Render Chromatic Siri Blobs
-      BLOB_LAYERS.forEach((blob) => {
-        const [r, g, b] = blob.color;
-        const layerTime = time * blob.speed + blob.phase;
-
-        const offsetX = Math.sin(layerTime) * (baseRadius * 0.45) + Math.cos(layerTime * 1.7) * (baseRadius * 0.15);
-        const offsetY = Math.cos(layerTime * 0.9) * (baseRadius * 0.45) + Math.sin(layerTime * 1.4) * (baseRadius * 0.15);
-
-        const bx = center + offsetX;
-        const by = center + offsetY;
-        const bRadius = (baseRadius * blob.baseR) * (1 + (smoothedVolume * 0.5) + (touchImpulse * 0.3));
-
-        const grad = ctx.createRadialGradient(bx, by, bRadius * 0.05, bx, by, bRadius * 1.35);
-        const alpha = Math.min(0.95, 0.65 + smoothedBass * 0.5);
-        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
-        grad.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${alpha * 0.55})`);
-        grad.addColorStop(0.8, `rgba(${r}, ${g}, ${b}, ${alpha * 0.15})`);
-        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-
-        const blobPoints = 36;
-        for (let j = 0; j <= blobPoints; j++) {
-          const phi = (j / blobPoints) * Math.PI * 2;
-          const wobble = Math.sin(phi * 4 + layerTime * 2.8) * (10 + smoothedBass * 24)
-                       + Math.cos(phi * 2 - layerTime * 1.6) * (8 + smoothedTreble * 16);
-          const currentR = bRadius + wobble;
-          const px = bx + Math.cos(phi) * currentR;
-          const py = by + Math.sin(phi) * currentR;
-
-          if (j === 0) ctx.moveTo(px, py);
-          else ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.fill();
-      });
-
-      // Luminous Core Hotspot
-      const coreIntensity = Math.min(1, 0.75 + (smoothedBass * 0.8) + (touchImpulse * 0.4));
-      const coreGrad = ctx.createRadialGradient(center, center, 0, center, center, baseRadius * 0.5);
-      coreGrad.addColorStop(0, `rgba(255, 255, 255, ${coreIntensity})`);
-      coreGrad.addColorStop(0.25, `rgba(180, 240, 255, ${coreIntensity * 0.8})`);
-      coreGrad.addColorStop(0.55, `rgba(120, 80, 255, ${coreIntensity * 0.35})`);
-      coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-      ctx.fillStyle = coreGrad;
-      ctx.beginPath();
-      ctx.arc(center, center, baseRadius * 0.6, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Glass Specular Refraction
-      ctx.globalCompositeOperation = 'overlay';
-      const specX = center - baseRadius * 0.35;
-      const specY = center - baseRadius * 0.35;
-      const specGrad = ctx.createRadialGradient(specX, specY, 2, specX, specY, baseRadius * 0.7);
-      specGrad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
-      specGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.15)');
-      specGrad.addColorStop(1, 'transparent');
-
-      ctx.fillStyle = specGrad;
-      ctx.beginPath();
-      ctx.arc(center, center, baseRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
-
-      // Outer Ambient Bloom pulsation
-      const bloomScale = 1 + (smoothedBass * 0.3) + (touchImpulse * 0.15);
-      ambientGlow.style.transform = `scale(${bloomScale}) rotate(${time * 12}deg)`;
+    // Flare Burst on Click
+    let flareIntensity = 0.0;
+    function triggerFlare() {
+      flareIntensity = 1.0;
+      btnText.textContent = 'Blazing Solar Flare Burst!';
+      setTimeout(() => {
+        btnText.textContent = 'Click Orb or Tap Here to Ignite Flare';
+      }, 1000);
     }
 
-    render();
+    flareBtn.addEventListener('click', triggerFlare);
+    canvas.addEventListener('pointerdown', triggerFlare);
+
+    // 60FPS Render Loop
+    let startTime = performance.now();
+
+    function renderFrame() {
+      requestAnimationFrame(renderFrame);
+
+      const elapsed = (performance.now() - startTime) * 0.001;
+
+      currentMouseX += (targetMouseX - currentMouseX) * 0.08;
+      currentMouseY += (targetMouseY - currentMouseY) * 0.08;
+      flareIntensity *= 0.94;
+
+      gl.uniform2f(uResolution, canvas.width, canvas.height);
+      gl.uniform1f(uTime, elapsed);
+      gl.uniform2f(uMouse, currentMouseX, currentMouseY);
+      gl.uniform1f(uFlare, flareIntensity);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    renderFrame();
   </script>
 </body>
 </html>
