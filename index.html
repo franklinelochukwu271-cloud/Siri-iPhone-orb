@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apple Siri Live Orb</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Container for the Siri sphere */
+    .siri-container {
+      position: relative;
+      width: 360px;
+      height: 360px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      .siri-container {
+        width: 290px;
+        height: 290px;
+      }
+    }
+
+    /* Outer ambient chromatic bloom */
+    .ambient-glow {
+      position: absolute;
+      inset: -50px;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(120, 40, 240, 0.3) 0%,
+        rgba(0, 210, 255, 0.2) 35%,
+        rgba(255, 0, 128, 0.16) 55%,
+        transparent 75%
+      );
+      filter: blur(52px);
+      pointer-events: none;
+      animation: ambientPulse 5s ease-in-out infinite alternate;
+    }
+
+    @keyframes ambientPulse {
+      0% { transform: scale(0.92) rotate(0deg); opacity: 0.7; }
+      100% { transform: scale(1.12) rotate(180deg); opacity: 1; }
+    }
+
+    /* Liquid Siri Canvas */
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      filter: drop-shadow(0 0 35px rgba(0, 195, 255, 0.45)) drop-shadow(0 0 65px rgba(255, 0, 128, 0.4));
+      transition: transform 0.08s ease-out;
+    }
+
+    /* Minimal UI Controls */
+    .ui-controls {
+      position: absolute;
+      bottom: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      z-index: 20;
+    }
+
+    .mic-button {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .mic-button:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.35);
+      transform: scale(1.04);
+    }
+
+    .mic-button.active {
+      background: linear-gradient(135deg, rgba(255, 0, 128, 0.35), rgba(0, 210, 255, 0.35));
+      border-color: rgba(255, 255, 255, 0.45);
+      box-shadow: 0 0 25px rgba(0, 210, 255, 0.45), 0 0 45px rgba(255, 0, 128, 0.3);
+    }
+
+    .mic-icon {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .status-text {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0.02em;
+      transition: color 0.3s ease;
+    }
+
+    .status-text.active {
+      color: #60a5fa;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Centered Liquid Siri Orb -->
+  <div class="siri-container" id="siriContainer" title="Tap to interact">
+    <div class="ambient-glow" id="ambientGlow"></div>
+    <canvas id="siriCanvas"></canvas>
+  </div>
+
+  <!-- Minimal Voice Controls -->
+  <div class="ui-controls">
+    <button class="mic-button" id="micBtn">
+      <svg class="mic-icon" viewBox="0 0 24 24">
+        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+      </svg>
+      <span id="btnLabel">Enable Voice Reactivity</span>
+    </button>
+    <div class="status-text" id="statusText">Tap the orb or button to activate voice listening</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('siriCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('siriContainer');
+    const ambientGlow = document.getElementById('ambientGlow');
+    const micBtn = document.getElementById('micBtn');
+    const btnLabel = document.getElementById('btnLabel');
+    const statusText = document.getElementById('statusText');
+
+    // High-DPI Canvas scaling
+    let size = 360;
+    function resizeCanvas() {
+      const rect = container.getBoundingClientRect();
+      size = Math.min(rect.width, rect.height);
+      const dpr = window.devicePixelRatio || 2;
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      ctx.scale(dpr, dpr);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Audio FFT Analyser
+    let audioCtx = null;
+    let analyser = null;
+    let micStream = null;
+    let isMicActive = false;
+    const freqData = new Uint8Array(64);
+
+    let audioVolume = 0;
+    let smoothedVolume = 0;
+    let audioBass = 0;
+    let smoothedBass = 0;
+    let audioTreble = 0;
+    let smoothedTreble = 0;
+
+    async function toggleMicrophone() {
+      if (isMicActive) {
+        stopMicrophone();
+      } else {
+        await startMicrophone();
+      }
+    }
+
+    async function startMicrophone() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStream = stream;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 128;
+        analyser.smoothingTimeConstant = 0.82;
+
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        isMicActive = true;
+        micBtn.classList.add('active');
+        btnLabel.textContent = 'Microphone Active';
+        statusText.textContent = 'Listening to your voice in real time...';
+        statusText.classList.add('active');
+      } catch (err) {
+        statusText.textContent = 'Microphone not permitted. Fluid simulation active.';
+      }
+    }
+
+    function stopMicrophone() {
+      if (micStream) {
+        micStream.getTracks().forEach(track => track.stop());
+        micStream = null;
+      }
+      if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+      isMicActive = false;
+      micBtn.classList.remove('active');
+      btnLabel.textContent = 'Enable Voice Reactivity';
+      statusText.textContent = 'Microphone paused. Click to listen again.';
+      statusText.classList.remove('active');
+    }
+
+    micBtn.addEventListener('click', toggleMicrophone);
+
+    // Tap/Touch Feedback
+    let touchImpulse = 0;
+    container.addEventListener('pointerdown', () => {
+      touchImpulse = 0.85;
+      if (!isMicActive) toggleMicrophone();
+    });
+
+    // Apple Siri Chromatic Blobs Palette
+    const BLOB_LAYERS = [
+      { color: [0, 230, 255], speed: 1.1, phase: 0.0, baseR: 0.72 },    // Cyan
+      { color: [255, 0, 128], speed: -0.9, phase: 1.5, baseR: 0.75 },   // Hot Pink / Magenta
+      { color: [120, 40, 255], speed: 1.4, phase: 3.1, baseR: 0.68 },   // Electric Violet
+      { color: [0, 110, 255], speed: -1.2, phase: 4.7, baseR: 0.70 },  // Royal Blue
+      { color: [255, 60, 180], speed: 0.7, phase: 2.2, baseR: 0.62 },   // Hot Orchid
+      { color: [80, 250, 220], speed: -1.5, phase: 5.5, baseR: 0.58 }   // Aqua Shimmer
+    ];
+
+    let time = 0;
+
+    // 60FPS Render Loop
+    function render() {
+      requestAnimationFrame(render);
+      time += 0.022;
+
+      // Audio frequency extraction
+      if (isMicActive && analyser) {
+        analyser.getByteFrequencyData(freqData);
+
+        let bSum = 0;
+        for (let i = 0; i < 6; i++) bSum += freqData[i];
+        audioBass = (bSum / 6) / 255;
+
+        let tSum = 0;
+        for (let i = 20; i < 45; i++) tSum += freqData[i];
+        audioTreble = (tSum / 25) / 255;
+
+        let vSum = 0;
+        for (let i = 0; i < freqData.length; i++) vSum += freqData[i];
+        audioVolume = (vSum / freqData.length) / 255;
+      } else {
+        // Natural gentle autonomous Siri breathing motion
+        audioBass = Math.sin(time * 1.8) * 0.06 + 0.08;
+        audioTreble = Math.cos(time * 2.5) * 0.04 + 0.05;
+        audioVolume = (audioBass + audioTreble) * 0.5;
+      }
+
+      smoothedVolume += (audioVolume - smoothedVolume) * 0.16;
+      smoothedBass += (audioBass - smoothedBass) * 0.18;
+      smoothedTreble += (audioTreble - smoothedTreble) * 0.2;
+      touchImpulse *= 0.92;
+
+      const center = size / 2;
+      const baseRadius = (size * 0.38) * (1 + (smoothedBass * 0.45) + (touchImpulse * 0.2));
+
+      ctx.clearRect(0, 0, size, size);
+
+      // Organic fluid clipping boundary
+      ctx.save();
+      ctx.beginPath();
+      const numPoints = 64;
+      for (let i = 0; i <= numPoints; i++) {
+        const theta = (i / numPoints) * Math.PI * 2;
+        const w1 = Math.sin(theta * 3 + time * 2.5) * (4 + smoothedBass * 18);
+        const w2 = Math.cos(theta * 5 - time * 3.2) * (3 + smoothedTreble * 14);
+        const r = baseRadius + w1 + w2;
+        const x = center + Math.cos(theta) * r;
+        const y = center + Math.sin(theta) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.clip();
+
+      // Deep fluid sphere backdrop
+      const baseGrad = ctx.createRadialGradient(center, center, baseRadius * 0.1, center, center, baseRadius);
+      baseGrad.addColorStop(0, '#0a0914');
+      baseGrad.addColorStop(0.7, '#040308');
+      baseGrad.addColorStop(1, '#000000');
+      ctx.fillStyle = baseGrad;
+      ctx.fill();
+
+      // Screen composite for chromatic color blending
+      ctx.globalCompositeOperation = 'screen';
+
+      // Render Chromatic Siri Blobs
+      BLOB_LAYERS.forEach((blob) => {
+        const [r, g, b] = blob.color;
+        const layerTime = time * blob.speed + blob.phase;
+
+        const offsetX = Math.sin(layerTime) * (baseRadius * 0.45) + Math.cos(layerTime * 1.7) * (baseRadius * 0.15);
+        const offsetY = Math.cos(layerTime * 0.9) * (baseRadius * 0.45) + Math.sin(layerTime * 1.4) * (baseRadius * 0.15);
+
+        const bx = center + offsetX;
+        const by = center + offsetY;
+        const bRadius = (baseRadius * blob.baseR) * (1 + (smoothedVolume * 0.5) + (touchImpulse * 0.3));
+
+        const grad = ctx.createRadialGradient(bx, by, bRadius * 0.05, bx, by, bRadius * 1.35);
+        const alpha = Math.min(0.95, 0.65 + smoothedBass * 0.5);
+        grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
+        grad.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${alpha * 0.55})`);
+        grad.addColorStop(0.8, `rgba(${r}, ${g}, ${b}, ${alpha * 0.15})`);
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+
+        const blobPoints = 36;
+        for (let j = 0; j <= blobPoints; j++) {
+          const phi = (j / blobPoints) * Math.PI * 2;
+          const wobble = Math.sin(phi * 4 + layerTime * 2.8) * (10 + smoothedBass * 24)
+                       + Math.cos(phi * 2 - layerTime * 1.6) * (8 + smoothedTreble * 16);
+          const currentR = bRadius + wobble;
+          const px = bx + Math.cos(phi) * currentR;
+          const py = by + Math.sin(phi) * currentR;
+
+          if (j === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      // Luminous Core Hotspot
+      const coreIntensity = Math.min(1, 0.75 + (smoothedBass * 0.8) + (touchImpulse * 0.4));
+      const coreGrad = ctx.createRadialGradient(center, center, 0, center, center, baseRadius * 0.5);
+      coreGrad.addColorStop(0, `rgba(255, 255, 255, ${coreIntensity})`);
+      coreGrad.addColorStop(0.25, `rgba(180, 240, 255, ${coreIntensity * 0.8})`);
+      coreGrad.addColorStop(0.55, `rgba(120, 80, 255, ${coreIntensity * 0.35})`);
+      coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(center, center, baseRadius * 0.6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Glass Specular Refraction
+      ctx.globalCompositeOperation = 'overlay';
+      const specX = center - baseRadius * 0.35;
+      const specY = center - baseRadius * 0.35;
+      const specGrad = ctx.createRadialGradient(specX, specY, 2, specX, specY, baseRadius * 0.7);
+      specGrad.addColorStop(0, 'rgba(255, 255, 255, 0.55)');
+      specGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.15)');
+      specGrad.addColorStop(1, 'transparent');
+
+      ctx.fillStyle = specGrad;
+      ctx.beginPath();
+      ctx.arc(center, center, baseRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+
+      // Outer Ambient Bloom pulsation
+      const bloomScale = 1 + (smoothedBass * 0.3) + (touchImpulse * 0.15);
+      ambientGlow.style.transform = `scale(${bloomScale}) rotate(${time * 12}deg)`;
+    }
+
+    render();
+  </script>
+</body>
+</html>
